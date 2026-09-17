@@ -1,0 +1,20 @@
+[Unit]
+Description=Java Multithreaded Socket Server
+After=network.target
+
+[Service]
+User=ubuntu
+# Change the working directory to where you cloned the repository on EC2
+WorkingDirectory=/home/ubuntu/JAVA-Multithreaded-web-server
+# Run the JAR file, setting the PORT environment variable
+Environment="PORT=80"
+# Since AWS EC2 requires root to bind to port 80, we use authbind or run as root.
+# For simplicity in this project, we'll bind to 8080 and use iptables, or just use 8080.
+ExecStart=/usr/bin/java -jar server.jar 8080
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
