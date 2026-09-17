@@ -12,21 +12,29 @@ Whether you're looking to master the fundamentals of network programming, explor
 - **Minimalist & Clean:** Written using core Java network I/O (`ServerSocket`, `BufferedReader`, `PrintWriter`) without the bloat of heavy frameworks.
 - **Highly Extensible:** The perfect starting point for building chat servers, multiplayer game backends, or your own custom API protocols.
 
-## 🛠️ How to Run
+## 🛠️ How to Run Locally
 
 1. **Compile the code:**
    ```bash
    javac Server.java Client.java
    ```
 
-2. **Start the Server:**
-   Open a terminal and run:
+2. **Package as a JAR (Deployment Ready):**
    ```bash
-   java Server
+   jar cfe server.jar Server Server.class
    ```
-   *The server will start listening for connections on port 8010.*
 
-3. **Start the Client (or multiple clients!):**
+3. **Start the Server:**
+   You can now run the packaged server. It defaults to port `8010`, but you can easily change it:
+   ```bash
+   # Run on default port 8010
+   java -jar server.jar
+   
+   # Or run on a custom port using an argument:
+   java -jar server.jar 9090
+   ```
+
+4. **Start the Client (or multiple clients!):**
    Open a new terminal window and run:
    ```bash
    java Client

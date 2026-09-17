@@ -6,56 +6,95 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class Server{
+public class Server {
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
 
-    public void run() throws IOException {
-        int port = 8010;
+    public void run(int port) throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-        // Thread pool with up to 10 concurrent threads
         ExecutorService threadPool = Executors.newFixedThreadPool(10);
-        
-        System.out.println("Server is listening on port " + port);
+
+        // JVM Shutdown Hook for graceful termination
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Initiating graceful shutdown...");
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Error closing server socket", e);
+            }
+            threadPool.shutdown();
+            try {
+                if (!threadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+                    threadPool.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                threadPool.shutdownNow();
+            }
+            logger.info("Server shutdown complete.");
+        }));
+
+        logger.info("Server is listening on port " + port);
 
         while (true) {
-            Socket acceptedConnection = serverSocket.accept();
-
-        System.out.println("Connection accepted from client: "
-                + acceptedConnection.getRemoteSocketAddress());
-
-        threadPool.execute(() -> {
             try {
-                PrintWriter toClient =
-                        new PrintWriter(acceptedConnection.getOutputStream(), true);
+                Socket acceptedConnection = serverSocket.accept();
+                logger.info("Connection accepted from client: " + acceptedConnection.getRemoteSocketAddress());
 
-                BufferedReader fromClient =
-                        new BufferedReader(
-                                new InputStreamReader(acceptedConnection.getInputStream()));
+                threadPool.execute(() -> {
+                    try {
+                        PrintWriter toClient = new PrintWriter(acceptedConnection.getOutputStream(), true);
+                        BufferedReader fromClient = new BufferedReader(new InputStreamReader(acceptedConnection.getInputStream()));
 
-                String msg = fromClient.readLine();
-                System.out.println("Client says: " + msg);
+                        String msg = fromClient.readLine();
+                        logger.info("Client says: " + msg);
 
-                toClient.println("Hello from server");
+                        toClient.println("Hello from server");
 
-                acceptedConnection.close();
+                        acceptedConnection.close();
+                    } catch (IOException e) {
+                        logger.log(Level.SEVERE, "Error handling client connection", e);
+                    }
+                });
             } catch (IOException e) {
-                e.printStackTrace();
+                if (serverSocket.isClosed()) {
+                    logger.info("Server socket was closed. Stopping accept loop.");
+                    break;
+                }
+                logger.log(Level.SEVERE, "Error accepting connection", e);
             }
-        });
+        }
     }
-}
 
+    public static void main(String[] args) {
+        int port = 8010; // Default port
+        
+        // 1. Check command line argument
+        if (args.length > 0) {
+            try {
+                port = Integer.parseInt(args[0]);
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid port in arguments, falling back to " + port);
+            }
+        } else {
+            // 2. Check environment variable
+            String envPort = System.getenv("PORT");
+            if (envPort != null && !envPort.isEmpty()) {
+                try {
+                    port = Integer.parseInt(envPort);
+                } catch (NumberFormatException e) {
+                    logger.warning("Invalid PORT environment variable, falling back to " + port);
+                }
+            }
+        }
 
-
-    public static void main(String[] arg){
         Server server = new Server();
-        try{
-            server.run();
+        try {
+            server.run(port);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Server encountered a fatal error", ex);
         }
-        catch(IOException ex){
-            ex.printStackTrace();
-        }
-
-
     }
 }
