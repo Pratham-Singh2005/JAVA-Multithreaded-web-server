@@ -41,8 +41,9 @@ Whether you're looking to master the fundamentals of network programming, explor
    ```
    *You can run this command in as many terminals as you want to simulate multiple concurrent connections.*
 
-## 🧠 What I Learned
+## 🧠 What I Learned & Project Highlights
 Building this project solidified my understanding of:
-- **Thread Pools (`ExecutorService`):** Managing threads efficiently to prevent OutOfMemory errors.
+- **Thread Pools (`ExecutorService`):** Managing threads efficiently to prevent OutOfMemory errors and handle concurrent clients smoothly.
 - **TCP Sockets:** Establishing reliable, persistent two-way communication between clients and servers.
 - **Blocking vs Non-Blocking I/O:** Understanding why single-threaded servers block and how to resolve it using concurrency.
+- **DevOps & Deployment:** Packaging Java apps via Maven, deploying to AWS EC2, configuring Linux `systemd` services, and automating CI/CD pipelines via GitHub Actions.
